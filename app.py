@@ -110,9 +110,9 @@ if auto_research:
             SEN_SCORE:: <suggested score from 1 to 10 for market sentiment/GMP>
             """
             try:
-                # Updated to gemini-1.5-flash for universal compatibility
+                # Updated to gemini-2.0-flash
                 response = client.models.generate_content(
-                    model="gemini-1.5-flash", contents=prompt
+                    model="gemini-2.0-flash", contents=prompt
                 )
                 text = response.text
 
