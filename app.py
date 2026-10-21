@@ -20,7 +20,6 @@ st.set_page_config(
 with st.sidebar:
     st.header("🔑 API Configuration")
 
-    # Try to load default from secrets if available
     default_key = ""
     try:
         default_key = (
@@ -38,8 +37,11 @@ with st.sidebar:
         help="Paste your Gemini API key from Google AI Studio here.",
     )
 
-    # Initialize client with sidebar key or environment variable
-    active_key = user_api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    active_key = (
+        user_api_key
+        or os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+    )
     client = genai.Client(api_key=active_key) if active_key else None
 
     st.markdown("---")
@@ -108,8 +110,9 @@ if auto_research:
             SEN_SCORE:: <suggested score from 1 to 10 for market sentiment/GMP>
             """
             try:
+                # Updated to gemini-1.5-flash for universal compatibility
                 response = client.models.generate_content(
-                    model="gemini-2.5-flash", contents=prompt
+                    model="gemini-1.5-flash", contents=prompt
                 )
                 text = response.text
 
