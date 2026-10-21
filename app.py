@@ -15,37 +15,34 @@ st.set_page_config(
 )
 
 # ---------------------------------------------------------
-# SECURE API KEY & CLIENT INITIALIZATION
-# ---------------------------------------------------------
-api_key = None
-try:
-    if "GEMINI_API_KEY" in st.secrets:
-        api_key = st.secrets["GEMINI_API_KEY"]
-    elif "GOOGLE_API_KEY" in st.secrets:
-        api_key = st.secrets["GOOGLE_API_KEY"]
-    elif "OPENAI_API_KEY" in st.secrets:
-        api_key = st.secrets["OPENAI_API_KEY"]
-except Exception:
-    pass
-
-if not api_key:
-    api_key = (
-        os.environ.get("GEMINI_API_KEY")
-        or os.environ.get("GOOGLE_API_KEY")
-        or os.environ.get("OPENAI_API_KEY")
-    )
-
-client = genai.Client(api_key=api_key) if api_key else None
-
-st.title("🤖 AI-Powered Hybrid IPO Evaluation Engine")
-st.caption(
-    "Type an IPO or company name to auto-populate metrics using AI, customize your framework, and export to Excel."
-)
-
-# ---------------------------------------------------------
-# SIDEBAR: COMPANY INPUT & AI RESEARCH TRIGGER
+# SIDEBAR: API KEY & TARGET COMPANY INPUT
 # ---------------------------------------------------------
 with st.sidebar:
+    st.header("🔑 API Configuration")
+
+    # Try to load default from secrets if available
+    default_key = ""
+    try:
+        default_key = (
+            st.secrets.get("GEMINI_API_KEY", "")
+            or st.secrets.get("GOOGLE_API_KEY", "")
+            or ""
+        )
+    except:
+        pass
+
+    user_api_key = st.text_input(
+        "Gemini API Key",
+        value=default_key,
+        type="password",
+        help="Paste your Gemini API key from Google AI Studio here.",
+    )
+
+    # Initialize client with sidebar key or environment variable
+    active_key = user_api_key or os.environ.get("GEMINI_API_KEY") or os.environ.get("GOOGLE_API_KEY")
+    client = genai.Client(api_key=active_key) if active_key else None
+
+    st.markdown("---")
     st.header("🔍 Target Company")
     input_company = st.text_input(
         "Company / IPO Name",
@@ -80,13 +77,18 @@ with st.sidebar:
     w_gov = st.slider("Governance & Proceeds Weight", 0.0, 0.5, 0.15, 0.05)
     w_sen = st.slider("Market Sentiment Weight", 0.0, 0.5, 0.10, 0.05)
 
+st.title("🤖 AI-Powered Hybrid IPO Evaluation Engine")
+st.caption(
+    "Type an IPO or company name, paste your API key in the sidebar, and auto-populate metrics using AI."
+)
+
 # ---------------------------------------------------------
 # AI RESEARCH LOGIC (GEMINI API)
 # ---------------------------------------------------------
 if auto_research:
     if not client:
         st.error(
-            "⚠️ GEMINI_API_KEY is missing! Please configure it in your Streamlit Cloud Settings -> Secrets."
+            "⚠️ Please enter a valid Gemini API Key in the sidebar input box!"
         )
     else:
         with st.spinner(
