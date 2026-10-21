@@ -14,13 +14,28 @@ st.set_page_config(
     layout="wide",
 )
 
-# Initialize Gemini Client (reads GEMINI_API_KEY from environment or secrets)
-client = None
-if "GEMINI_API_KEY" in os.environ or "GOOGLE_API_KEY" in os.environ:
-    api_key = os.environ.get("GEMINI_API_KEY") or os.environ.get(
-        "GOOGLE_API_KEY"
+# ---------------------------------------------------------
+# SECURE API KEY & CLIENT INITIALIZATION
+# ---------------------------------------------------------
+api_key = None
+try:
+    if "GEMINI_API_KEY" in st.secrets:
+        api_key = st.secrets["GEMINI_API_KEY"]
+    elif "GOOGLE_API_KEY" in st.secrets:
+        api_key = st.secrets["GOOGLE_API_KEY"]
+    elif "OPENAI_API_KEY" in st.secrets:
+        api_key = st.secrets["OPENAI_API_KEY"]
+except Exception:
+    pass
+
+if not api_key:
+    api_key = (
+        os.environ.get("GEMINI_API_KEY")
+        or os.environ.get("GOOGLE_API_KEY")
+        or os.environ.get("OPENAI_API_KEY")
     )
-    client = genai.Client(api_key=api_key)
+
+client = genai.Client(api_key=api_key) if api_key else None
 
 st.title("🤖 AI-Powered Hybrid IPO Evaluation Engine")
 st.caption(
@@ -71,7 +86,7 @@ with st.sidebar:
 if auto_research:
     if not client:
         st.error(
-            "⚠️ GEMINI_API_KEY is missing! Please set it in your environment variables to use auto-research."
+            "⚠️ GEMINI_API_KEY is missing! Please configure it in your Streamlit Cloud Settings -> Secrets."
         )
     else:
         with st.spinner(
@@ -96,7 +111,6 @@ if auto_research:
                 )
                 text = response.text
 
-                # Parse simple response lines
                 lines = text.strip().split("\n")
                 res_data = {}
                 for line in lines:
